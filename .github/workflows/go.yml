@@ -28,6 +28,7 @@ jobs:
 
     - name: Build for ${{ matrix.goos }}-${{ matrix.goarch }}
       run: |
+        mkdir -p ./bin/${{ matrix.goos }}-${{ matrix.goarch }}
         GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o ./bin/${{ matrix.goos }}-${{ matrix.goarch }}/myapp ./...
 
     - name: Compress binary with UPX
@@ -36,7 +37,6 @@ jobs:
 
     - name: Archive binaries
       run: |
-        mkdir -p ./bin/${{ matrix.goos }}-${{ matrix.goarch }}
         tar -czvf ./bin/${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz -C ./bin/${{ matrix.goos }}-${{ matrix.goarch }} myapp
 
     - name: Upload binaries
