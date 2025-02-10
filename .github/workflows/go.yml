@@ -1,0 +1,46 @@
+name: Go Multi-Platform Build with UPX
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]  # 操作系统
+        goarch: [amd64, arm64]          # 架构
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.20'
+
+    - name: Install UPX
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y upx
+
+    - name: Build for ${{ matrix.goos }}-${{ matrix.goarch }}
+      run: |
+        GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o ./bin/${{ matrix.goos }}-${{ matrix.goarch }}/myapp ./...
+
+    - name: Compress binary with UPX
+      run: |
+        upx --best ./bin/${{ matrix.goos }}-${{ matrix.goarch }}/myapp
+
+    - name: Archive binaries
+      run: |
+        mkdir -p ./bin/${{ matrix.goos }}-${{ matrix.goarch }}
+        tar -czvf ./bin/${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz -C ./bin/${{ matrix.goos }}-${{ matrix.goarch }} myapp
+
+    - name: Upload binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: ./bin/${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
